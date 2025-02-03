@@ -1,4 +1,8 @@
 use raylib::prelude::*;
+use rusqlite::{params, Connection, Result};
+
+mod models;
+mod simulation;
 
 const GRAPH_X_OFFSET: i32 = 50; // Left margin
 const GRAPH_Y_OFFSET: i32 = 50; // Top margin
@@ -18,6 +22,10 @@ fn main() {
         .resizable()
         .build();
 
+    let button_rect = Rectangle::new(50.0, 50.0, 200.0, 50.0);
+    let button_color = Color::DARKGRAY;
+    let hover_color = Color::GRAY;
+    let text_color = Color::WHITE;
     // Simulated data for a time range of 20–50 minutes
     // let time_range = (20..=50).collect::<Vec<i32>>();
     // let results = time_range
@@ -42,44 +50,66 @@ fn main() {
     // let max_value = results.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
 
     while !rl.window_should_close() {
+        let mouse_pos = rl.get_mouse_position();
+        let mouse_pressed = rl.is_mouse_button_pressed(MouseButton::MOUSE_BUTTON_LEFT);
+
+        // Check if the mouse is inside the button
+        let is_hovered = button_rect.check_collision_point_rec(mouse_pos);
+
+        // Check if clicked
+        if is_hovered && mouse_pressed {
+            println!("Button Clicked!");
+            let _ = simulation::create_simulation();
+
+        }
+
         let mut d = rl.begin_drawing(&thread);
         d.clear_background(Color::WHITE);
 
         // Draw graph axes
-        d.draw_line(
-            GRAPH_X_OFFSET,
-            GRAPH_Y_OFFSET + graph_height,
-            GRAPH_X_OFFSET + graph_width,
-            GRAPH_Y_OFFSET + graph_height,
-            Color::BLACK,
-        ); // X-axis
-        d.draw_line(
-            GRAPH_X_OFFSET,
-            GRAPH_Y_OFFSET,
-            GRAPH_X_OFFSET,
-            GRAPH_Y_OFFSET + graph_height,
-            Color::BLACK,
-        ); // Y-axis
+        // d.draw_line(
+        //     GRAPH_X_OFFSET,
+        //     GRAPH_Y_OFFSET + graph_height,
+        //     GRAPH_X_OFFSET + graph_width,
+        //     GRAPH_Y_OFFSET + graph_height,
+        //     Color::BLACK,
+        // ); // X-axis
+        // d.draw_line(
+        //     GRAPH_X_OFFSET,
+        //     GRAPH_Y_OFFSET,
+        //     GRAPH_X_OFFSET,
+        //     GRAPH_Y_OFFSET + graph_height/2,
+        //     Color::BLACK,
+        // ); // Y-axis
 
-        let foo = get_current_monitor();
-        d.draw_text(&foo.to_string(), 10, 40, 40, Color::BLUE);
-
-        d.draw_text(&graph_width.to_string(), 30, 30, 30, Color::GREEN);
-        d.draw_text(&graph_height.to_string(), 90, 90, 90, Color::GREEN);
         // Draw labels
-        d.draw_text(
-            "Simulation Results (Value)",
-            10,
-            GRAPH_Y_OFFSET - 20,
-            20,
-            Color::GRAY,
+        // d.draw_text(
+        //     "Simulation Results (Value)",
+        //     10,
+        //     GRAPH_Y_OFFSET - 20,
+        //     20,
+        //     Color::GRAY,
+        // );
+        // d.draw_text(
+        //     "Time (Minutes)",
+        //     GRAPH_X_OFFSET + graph_width / 2 - 20,
+        //     GRAPH_Y_OFFSET + graph_height + 10,
+        //     20,
+        //     Color::GRAY,
+        // );
+
+        d.draw_rectangle_rec(
+            button_rect,
+            if is_hovered { hover_color } else { button_color },
         );
+
+        // Draw button text
         d.draw_text(
-            "Time (Minutes)",
-            GRAPH_X_OFFSET + graph_width / 2 - 20,
-            GRAPH_Y_OFFSET + graph_height + 10,
+            "Click Me!",
+            button_rect.x as i32 + 50,
+            button_rect.y as i32 + 15,
             20,
-            Color::GRAY,
+            text_color,
         );
 
         // Plot the graph
